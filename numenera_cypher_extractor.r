@@ -1,3 +1,12 @@
+### Extracts cyphers (or artifacts, with some tweaking) from sourcebooks for Monte Cook Game's Numenera
+### This requires you to already have the sourcebooks, so as to respectfully not violate the fan use policy
+### https://www.montecookgames.com/fan-support/fan-use-policy/
+### As currently written, this is set up for Sir Arthour's Technology Compendium. Filenames/locations are not
+### written to be stored for easy generalization, so tread carefully!
+###-----------------------------------------------------------------
+
+### Just installing and attaching packages. I abandoned streamlining via tidyr because hacky
+### solutions were faster for me to implement. Feel free to improve them!
 install.packages("dplyr")
 install.packages("tm")
 #install.packages("tidyr")
@@ -7,19 +16,18 @@ require(dplyr)
 #require(tidyr)
 require(stringr)
 
-### Before you start!
+### Before you start! This is to convert a sourcebook to .txt
+### The rest of the script assumes that you've done this and then made a separate .txt file that contains
+### just the cyphers chapter(s)
 ## Download and install pdftotxt from
 ## ftp://ftp.foolabs.com/pub/xpdf/xpdfbin-win-3.03.zip
-## Adjust the following few lines as needed, obviously
-## The rest of the script assumes that you've done this and then made a separate .txt file that contains
-## just the cyphers chapter(s)
 # exe <- "C:/Program Files (x86)/xpdfbin-win-3.04/bin64/pdftotext.exe"
 # pdf <- "C:/Users/NS/Documents/Numenera/Numenera-Ninth_World_Guidebook.pdf"
 # exe <- "C:/Program Files (x86)/xpdfbin-win-3.04/bin64/pdftotext.exe"
 # system(paste("\"", exe, "\" \"", pdf, "\"", sep = ""), wait = F)
  
 ## Read in the textfile containing just the chunk of the document that listed cyphers
-## I just copied and pasted in notepad to cut the .txt down to the listings of cyphers
+## My method was to copy and paste in notepad to cut the .txt down to the relevant chapter[s]
 cyphers.arthour <- "C:/Users/NS/Documents/Numenera/cyphers.txt" %>% readLines()
  
 ## Remove all the cruft lines that don't contain information about the cyphers
@@ -34,8 +42,8 @@ cyphers.raw <- data.frame(cyphers.arthour, stringsAsFactors = F)
 cyphers.raw$id <- NA
  
 ## Go through and any line that has "Level:" in it gets an id number (the row number it occurs in) because
-## every cypher has that line and it's easy to identify. The previous line should always be the cypher name, so
-## it gets the same number
+## every cypher has that line and it's easy to identify with a grep. The previous line should always be the
+## cypher name, so it gets the same number
 for(n in 1:nrow(cyphers.raw)){
   if (grepl("Level:", cyphers.raw$cyphers.arthour[n])){
     cyphers.raw$id[n] <- n
@@ -87,7 +95,7 @@ cyphers.tidier$effect <- NA
  
 ## The real sh*t. This grabs the qualities of the cypher and writes them into a column that matches that name
 for (n in 1:nrow(cyphers.tidier)){
-  ## Line 2 is where things like the level and effect can be found usually, so this makes a vector of strings, each representing
+  ## line.2 is where things like the level and effect can be found usually, so this makes a vector of strings, each representing
   ## a word
   contents <- str_split(cyphers.tidier$line.2[n], " ") %>% as.vector()
   contents <- contents[[1]]
@@ -118,7 +126,7 @@ for (n in 1:nrow(cyphers.tidier)){
 ## Maybe I should have a name field?
 cyphers.tidier$name <- cyphers.tidier$line.1
  
-## Put everything into a nice, cleanish data frame
+## Put everything into a nice, cleanish data frame. These would definitely need to be changed for artifacts
 cyphers <- cyphers.tidier[,c("name", "level", "usable", "wearable", "internal", "effect", "additional")]
 
 ## Writing out the data table for final editing and formatting
